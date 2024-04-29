@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:qr_att/homescreen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,7 +18,10 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController passController = TextEditingController();
   double screenHeight = 0;
   double screenWidth = 0;
+
   Color primary = Color.fromRGBO(108, 53, 222, 1);
+
+  late SharedPreferences sharedPreferences;
 
   @override
   Widget build(BuildContext context) {
@@ -62,42 +68,99 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-          Container(
-            alignment: Alignment.centerLeft,
-            margin: EdgeInsets.symmetric(
-              horizontal: screenWidth / 12,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                fieldTitle("Student ID"),
-                customField(
-                  "Enter your student ID",
-                  idController,
-                  false,
-                ),
-                fieldTitle("Password"),
-                customField("Enter your password ", passController, true),
-                Container(
-                    height: 60,
-                    width: screenWidth,
-                    margin: EdgeInsets.only(top: screenHeight / 40),
-                    decoration: BoxDecoration(
-                      color: primary,
-                      borderRadius: const BorderRadius.all(Radius.circular(30)),
-                    ),
-                    child: Center(
-                      child: Text(
-                        "LOGIN",
-                        style: TextStyle(
-                          fontFamily: "NexaBold",
-                          fontSize: screenWidth / 26,
-                          color: Colors.white,
-                          letterSpacing: 2,
-                        ),
+          GestureDetector(
+            onTap: () async {
+              FocusScope.of(context).unfocus();
+              String id = idController.text.trim();
+              String password = passController.text.trim();
+
+              if (id.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Student ID is empty!"),
+                ));
+              } else if (password.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Password is empty!"),
+                ));
+              } else {
+                QuerySnapshot snap = await FirebaseFirestore.instance
+                    .collection('student')
+                    .where('id', isEqualTo: id)
+                    .get();
+
+                try {
+                  if (password == snap.docs[0]['password']) {
+                    sharedPreferences = await SharedPreferences.getInstance();
+
+                    sharedPreferences.setString('studentId', id).then((_) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => HomeScreen()),
+                      );
+                    });
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("Password is not correct!"),
+                    ));
+                  }
+                } catch (e) {
+                  String error = "  ";
+                  print(e.toString());
+                  if (e.toString() ==
+                      "RangeError (index): Index out of range: no indices are valid: 0") {
+                    setState(() {
+                      error = "Student ID doesn't exist";
+                    });
+                  } else {
+                    setState(() {
+                      error = "Something went wrong";
+                    });
+                  }
+
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(error),
+                  ));
+                }
+              }
+            },
+            child: Container(
+              alignment: Alignment.centerLeft,
+              margin: EdgeInsets.symmetric(
+                horizontal: screenWidth / 12,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  fieldTitle("Student ID"),
+                  customField(
+                    "Enter your student ID",
+                    idController,
+                    false,
+                  ),
+                  fieldTitle("Password"),
+                  customField("Enter your password ", passController, true),
+                  Container(
+                      height: 60,
+                      width: screenWidth,
+                      margin: EdgeInsets.only(top: screenHeight / 40),
+                      decoration: BoxDecoration(
+                        color: primary,
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(30)),
                       ),
-                    ))
-              ],
+                      child: Center(
+                        child: Text(
+                          "LOGIN",
+                          style: TextStyle(
+                            fontFamily: "NexaBold",
+                            fontSize: screenWidth / 26,
+                            color: Colors.white,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ))
+                ],
+              ),
             ),
           ),
         ],
