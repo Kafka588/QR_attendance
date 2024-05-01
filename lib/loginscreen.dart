@@ -1,7 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:qr_att/homescreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   double screenHeight = 0;
   double screenWidth = 0;
 
-  Color primary = Color.fromRGBO(108, 53, 222, 1);
+  Color primary = const Color.fromRGBO(108, 53, 222, 1);
 
   late SharedPreferences sharedPreferences;
 
@@ -95,16 +93,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     sharedPreferences.setString('studentId', id).then((_) {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => HomeScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => const HomeScreen()),
                       );
                     });
                   } else {
+                    // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content: Text("Password is not correct!"),
                     ));
                   }
                 } catch (e) {
                   String error = "  ";
+                  // ignore: avoid_print
                   print(e.toString());
                   if (e.toString() ==
                       "RangeError (index): Index out of range: no indices are valid: 0") {
@@ -117,6 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     });
                   }
 
+                  // ignore: use_build_context_synchronously
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(error),
                   ));
@@ -185,7 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
       String hint, TextEditingController controller, bool obscure) {
     return Container(
       width: screenWidth,
-      margin: EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -198,7 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ]),
       child: Row(
         children: [
-          Container(
+          SizedBox(
             width: screenWidth / 6,
             child: Icon(
               Icons.person,
