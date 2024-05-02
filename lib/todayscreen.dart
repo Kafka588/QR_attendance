@@ -7,7 +7,7 @@ import 'package:qr_att/model/user.dart';
 import 'package:slide_to_act/slide_to_act.dart';
 
 class TodayScreen extends StatefulWidget {
-  const TodayScreen({Key? key}) : super(key: key);
+  const TodayScreen({super.key});
 
   @override
   _TodayScreenState createState() => _TodayScreenState();
@@ -43,8 +43,8 @@ class _TodayScreenState extends State<TodayScreen> {
           .get();
 
       setState(() {
-        checkIn = snap2['checkIn'] ?? "--/--";
-        checkOut = snap2['checkOut'] ?? "--/--";
+        checkIn = snap2['checkIn'];
+        checkOut = snap2['checkOut'];
       });
     } catch (e) {
       setState(() {
@@ -79,7 +79,7 @@ class _TodayScreenState extends State<TodayScreen> {
             Container(
               margin: const EdgeInsets.only(top: 8),
               child: Text(
-                "Student " + User.username,
+                "Student ${User.username}",
                 style: TextStyle(
                   color: Colors.black,
                   fontFamily: "NexaBold",
@@ -203,88 +203,93 @@ class _TodayScreenState extends State<TodayScreen> {
                 }),
             checkOut == "--/--"
                 ? Container(
-                    margin: EdgeInsets.only(top: 24),
+                    margin: const EdgeInsets.only(top: 24),
                     child: Builder(
                       builder: (context) {
                         final GlobalKey<SlideActionState> key = GlobalKey();
 
                         return SlideAction(
-                          text: checkIn == "--/--"
-                              ? "Slide to Check In"
-                              : "Slide to Check Out",
-                          textStyle: TextStyle(
-                            fontFamily: "NexaRegular",
-                            fontSize: screenWidth / 20,
-                            color: Colors.black54,
-                          ),
-                          outerColor: Colors.white,
-                          innerColor: primary,
-                          key: key,
-                          onSubmit: () async {
-                            Timer(Duration(seconds: 1), () {
-                              key.currentState!.reset();
-                            });
+                            text: checkIn == "--/--"
+                                ? "Slide to Check In"
+                                : "Slide to Check Out",
+                            textStyle: TextStyle(
+                              fontFamily: "NexaRegular",
+                              fontSize: screenWidth / 20,
+                              color: Colors.black54,
+                            ),
+                            outerColor: Colors.white,
+                            innerColor: primary,
+                            key: key,
+                            onSubmit: () async {
+                              Timer(const Duration(seconds: 1), () {
+                                key.currentState!.reset();
+                              });
+                              QuerySnapshot snap = await FirebaseFirestore
+                                  .instance
+                                  .collection("student")
+                                  .where('id', isEqualTo: User.username)
+                                  .get();
 
-                            final DateTime now = DateTime.now();
-                            final String currentTime =
-                                DateFormat('hh:mm').format(now);
+                              DocumentSnapshot snap2 = await FirebaseFirestore
+                                  .instance
+                                  .collection("student")
+                                  .doc(snap.docs[0].id)
+                                  .collection("Record")
+                                  .doc(DateFormat('dd MMMM yyyy')
+                                      .format(DateTime.now()))
+                                  .get();
+                              try {
+                                String checkIn = snap2['checkIn'];
 
-                            QuerySnapshot snap = await FirebaseFirestore
-                                .instance
-                                .collection("student")
-                                .where('id', isEqualTo: User.username)
-                                .get();
-
-                            final String recordDate =
-                                DateFormat('dd MMMM yyyy').format(now);
-
-                            try {
-                              if (checkIn == "--/--") {
                                 setState(() {
-                                  checkIn = currentTime;
+                                  checkOut = DateFormat('hh:mm')
+                                      .format(DateTime.now());
                                 });
                                 await FirebaseFirestore.instance
                                     .collection("student")
                                     .doc(snap.docs[0].id)
                                     .collection("Record")
-                                    .doc(recordDate)
-                                    .set({
-                                  'checkIn': currentTime,
-                                });
-                              } else if (checkOut == "--/--") {
-                                setState(() {
-                                  checkOut = currentTime;
-                                });
-                                await FirebaseFirestore.instance
-                                    .collection("student")
-                                    .doc(snap.docs[0].id)
-                                    .collection("Record")
-                                    .doc(recordDate)
+                                    .doc(DateFormat('dd MMMM yyyy')
+                                        .format(DateTime.now()))
                                     .update({
-                                  'checkOut': currentTime,
+                                  'date': Timestamp.now(),
+                                  'checkIn': checkIn,
+                                  'checkOut': DateFormat('hh:mm')
+                                      .format(DateTime.now()),
+                                });
+                              } catch (e) {
+                                setState(() {
+                                  checkIn = DateFormat('hh:mm')
+                                      .format(DateTime.now());
+                                });
+                                await FirebaseFirestore.instance
+                                    .collection("student")
+                                    .doc(snap.docs[0].id)
+                                    .collection("Record")
+                                    .doc(DateFormat('dd MMMM yyyy')
+                                        .format(DateTime.now()))
+                                    .set({
+                                  'date': Timestamp.now(),
+                                  'checkIn': DateFormat('hh:mm')
+                                      .format(DateTime.now()),
+                                  'checkOut': "--/--",
                                 });
                               }
-                            } catch (e) {
-                              // Handle errors
-                            }
-                          },
-                        );
+                            });
                       },
                     ),
                   )
                 : Container(
-                    margin: const EdgeInsets.only(top: 32),
-                    child: Center(
-                      child: Text(
-                        "Yout have completed this day!",
-                        style: TextStyle(
-                          fontFamily: "NexaRegular",
-                          fontSize: screenWidth / 20,
-                          color: Colors.black54,
-                        ),
+                    margin: const EdgeInsets.only(top: 32, bottom: 32),
+                    child: Text(
+                      "You have completed this day!",
+                      style: TextStyle(
+                        fontFamily: "NexaRegular",
+                        fontSize: screenWidth / 20,
+                        color: Colors.black54,
                       ),
                     ),
-                  )
+                  ),
           ],
         ),
       ),
