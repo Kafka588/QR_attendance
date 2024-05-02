@@ -17,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Color primary = const Color.fromRGBO(108, 53, 222, 1);
 
-  int currentIndex = 0;
+  int currentIndex = 1;
 
   List<IconData> navigationIcons = [
     // ignore: deprecated_member_use
