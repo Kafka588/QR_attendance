@@ -5,7 +5,7 @@ import 'package:qr_att/profilescreen.dart';
 import 'package:qr_att/todayscreen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -15,11 +15,12 @@ class _HomeScreenState extends State<HomeScreen> {
   double screenHeight = 0;
   double screenWidth = 0;
 
-  Color primary = Color.fromRGBO(108, 53, 222, 1);
+  Color primary = const Color.fromRGBO(108, 53, 222, 1);
 
   int currentIndex = 0;
 
   List<IconData> navigationIcons = [
+    // ignore: deprecated_member_use
     FontAwesomeIcons.calendarAlt,
     FontAwesomeIcons.check,
     FontAwesomeIcons.user,
@@ -33,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: IndexedStack(
         index: currentIndex,
-        children: [
+        children: const [
           CalendarScreen(),
           TodayScreen(),
           ProfileScreen(),
@@ -41,12 +42,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       bottomNavigationBar: Container(
         height: 70,
-        margin: EdgeInsets.only(
+        margin: const EdgeInsets.only(
           left: 12,
           right: 12,
           bottom: 24,
         ),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.all(Radius.circular(40)),
           boxShadow: [
@@ -58,7 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.all(Radius.circular(40)),
+          borderRadius: const BorderRadius.all(Radius.circular(40)),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -84,12 +85,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         if (i == currentIndex)
                           Container(
-                            margin: EdgeInsets.only(top: 6),
+                            margin: const EdgeInsets.only(top: 6),
                             height: 3,
                             width: 22,
                             decoration: BoxDecoration(
                               borderRadius:
-                                  BorderRadius.all(Radius.circular(40)),
+                                  const BorderRadius.all(Radius.circular(40)),
                               color: primary,
                             ),
                           ),
