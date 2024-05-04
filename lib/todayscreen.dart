@@ -31,12 +31,12 @@ class _TodayScreenState extends State<TodayScreen> {
   void _getRecord() async {
     try {
       QuerySnapshot snap = await FirebaseFirestore.instance
-          .collection("student")
+          .collection("Employee")
           .where('id', isEqualTo: User.username)
           .get();
 
       DocumentSnapshot snap2 = await FirebaseFirestore.instance
-          .collection("student")
+          .collection("Employee")
           .doc(snap.docs[0].id)
           .collection("Record")
           .doc(DateFormat('dd MMMM yyyy').format(DateTime.now()))
@@ -187,20 +187,21 @@ class _TodayScreenState extends State<TodayScreen> {
               ),
             ),
             StreamBuilder(
-                stream: Stream.periodic(const Duration(seconds: 1)),
-                builder: (context, snapshot) {
-                  return Container(
-                    margin: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      DateFormat("hh:mm:ss a").format(DateTime.now()),
-                      style: TextStyle(
-                        fontFamily: "NexaRegular",
-                        fontSize: screenWidth / 20,
-                        color: Colors.black54,
-                      ),
+              stream: Stream.periodic(const Duration(seconds: 1)),
+              builder: (context, snapshot) {
+                return Container(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    DateFormat('hh:mm:ss a').format(DateTime.now()),
+                    style: TextStyle(
+                      fontFamily: "NexaRegular",
+                      fontSize: screenWidth / 20,
+                      color: Colors.black54,
                     ),
-                  );
-                }),
+                  ),
+                );
+              },
+            ),
             checkOut == "--/--"
                 ? Container(
                     margin: const EdgeInsets.only(top: 24),
@@ -245,6 +246,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                   checkOut = DateFormat('hh:mm')
                                       .format(DateTime.now());
                                 });
+
                                 await FirebaseFirestore.instance
                                     .collection("student")
                                     .doc(snap.docs[0].id)
@@ -262,6 +264,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                   checkIn = DateFormat('hh:mm')
                                       .format(DateTime.now());
                                 });
+
                                 await FirebaseFirestore.instance
                                     .collection("student")
                                     .doc(snap.docs[0].id)
