@@ -1,3 +1,4 @@
 class User {
-  static String username = " ";
+  static String studentID = " ";
+  static String id = " ";
 }

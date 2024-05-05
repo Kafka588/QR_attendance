@@ -32,7 +32,7 @@ class _TodayScreenState extends State<TodayScreen> {
     try {
       QuerySnapshot snap = await FirebaseFirestore.instance
           .collection("student")
-          .where('id', isEqualTo: User.username)
+          .where('id', isEqualTo: User.studentID)
           .get();
 
       DocumentSnapshot snap2 = await FirebaseFirestore.instance
@@ -79,7 +79,7 @@ class _TodayScreenState extends State<TodayScreen> {
             Container(
               margin: const EdgeInsets.only(top: 8),
               child: Text(
-                "Student " + User.username,
+                "Student " + User.studentID,
                 style: TextStyle(
                   color: Colors.black,
                   fontFamily: "NexaBold",
@@ -221,13 +221,10 @@ class _TodayScreenState extends State<TodayScreen> {
                             innerColor: primary,
                             key: key,
                             onSubmit: () async {
-                              Timer(Duration(seconds: 1), () {
-                                key.currentState!.reset();
-                              });
                               QuerySnapshot snap = await FirebaseFirestore
                                   .instance
                                   .collection("student")
-                                  .where('id', isEqualTo: User.username)
+                                  .where('id', isEqualTo: User.studentID)
                                   .get();
 
                               DocumentSnapshot snap2 = await FirebaseFirestore
@@ -252,6 +249,7 @@ class _TodayScreenState extends State<TodayScreen> {
                                     .doc(DateFormat('dd MMMM yyyy')
                                         .format(DateTime.now()))
                                     .update({
+                                  'date': Timestamp.now(),
                                   'checkIn': checkIn,
                                   'checkOut': DateFormat('hh:mm').format(
                                     DateTime.now(),
@@ -269,11 +267,15 @@ class _TodayScreenState extends State<TodayScreen> {
                                     .doc(DateFormat('dd MMMM yyyy')
                                         .format(DateTime.now()))
                                     .set({
+                                  'date': Timestamp.now(),
                                   'checkIn': DateFormat('hh:mm').format(
                                     DateTime.now(),
-                                  )
+                                  ),
+                                  'checkOut': "--/--",
                                 });
                               }
+
+                              key.currentState!.reset();
                             });
                       },
                     ),
