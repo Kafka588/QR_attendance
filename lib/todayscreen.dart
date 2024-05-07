@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_att/model/user.dart';
 import 'package:slide_to_act/slide_to_act.dart';
@@ -20,7 +21,46 @@ class _TodayScreenState extends State<TodayScreen> {
   String checkIn = "--/--";
   String checkOut = "--/--";
 
+  // Location
+  String locationMessage = '';
+  late String lat;
+  late String long;
+  // University location
+  final double minUniversityLatitude = 47.926200;
+  final double maxUniversityLatitude = 47.926668;
+  final double minUniversityLongitude = 106.883102;
+  final double maxUniversityLongitude = 106.885400;
+
   Color primary = const Color.fromRGBO(108, 53, 222, 1);
+
+  Future<Position> _getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return Future.error('Location services are disabled');
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('Location permissions are permanently denied');
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
+
+  Future<bool> _isLocationWithinBoundary(Position currentPosition) async {
+    double latitude = currentPosition.latitude;
+    double longitude = currentPosition.longitude;
+
+    // Check if latitude is within the defined range
+    bool isLatitudeWithinRange = (latitude >= minUniversityLatitude &&
+        latitude <= maxUniversityLatitude);
+    print('Is latitude within range? $isLatitudeWithinRange');
+
+    // Check if longitude is within the defined range
+    bool isLongitudeWithinRange = (longitude >= minUniversityLongitude &&
+        longitude <= maxUniversityLongitude);
+    print('Is longitude within range? $isLongitudeWithinRange');
+
+    // Return true if both latitude and longitude are within the defined range
+    return isLatitudeWithinRange && isLongitudeWithinRange;
+  }
 
   @override
   void initState() {
@@ -221,61 +261,95 @@ class _TodayScreenState extends State<TodayScreen> {
                             innerColor: primary,
                             key: key,
                             onSubmit: () async {
-                              QuerySnapshot snap = await FirebaseFirestore
-                                  .instance
-                                  .collection("student")
-                                  .where('id', isEqualTo: User.studentID)
-                                  .get();
-
-                              DocumentSnapshot snap2 = await FirebaseFirestore
-                                  .instance
-                                  .collection("student")
-                                  .doc(snap.docs[0].id)
-                                  .collection("Record")
-                                  .doc(DateFormat('dd MMMM yyyy')
-                                      .format(DateTime.now()))
-                                  .get();
-
-                              try {
-                                String checkIn = snap2['checkIn'];
+                              _getCurrentLocation().then((value) {
+                                lat = '${value.latitude}';
+                                long = '${value.longitude}';
                                 setState(() {
-                                  checkOut = DateFormat('hh:mm')
-                                      .format(DateTime.now());
+                                  locationMessage =
+                                      'location - latitude: $lat, longtitude: $long';
                                 });
-                                await FirebaseFirestore.instance
+                              });
+                              Position currentPosition =
+                                  await _getCurrentLocation();
+                              bool isWithinUniversity =
+                                  await _isLocationWithinBoundary(
+                                      currentPosition);
+
+                              if (isWithinUniversity) {
+                                print('boltson');
+
+                                QuerySnapshot snap = await FirebaseFirestore
+                                    .instance
+                                    .collection("student")
+                                    .where('id', isEqualTo: User.studentID)
+                                    .get();
+
+                                DocumentSnapshot snap2 = await FirebaseFirestore
+                                    .instance
                                     .collection("student")
                                     .doc(snap.docs[0].id)
                                     .collection("Record")
                                     .doc(DateFormat('dd MMMM yyyy')
                                         .format(DateTime.now()))
-                                    .update({
-                                  'date': Timestamp.now(),
-                                  'checkIn': checkIn,
-                                  'checkOut': DateFormat('hh:mm').format(
-                                    DateTime.now(),
-                                  )
-                                });
-                              } catch (e) {
-                                setState(() {
-                                  checkIn = DateFormat('hh:mm')
-                                      .format(DateTime.now());
-                                });
-                                await FirebaseFirestore.instance
-                                    .collection("student")
-                                    .doc(snap.docs[0].id)
-                                    .collection("Record")
-                                    .doc(DateFormat('dd MMMM yyyy')
-                                        .format(DateTime.now()))
-                                    .set({
-                                  'date': Timestamp.now(),
-                                  'checkIn': DateFormat('hh:mm').format(
-                                    DateTime.now(),
+                                    .get();
+
+                                try {
+                                  String checkIn = snap2['checkIn'];
+                                  setState(() {
+                                    checkOut = DateFormat('hh:mm')
+                                        .format(DateTime.now());
+                                  });
+                                  await FirebaseFirestore.instance
+                                      .collection("student")
+                                      .doc(snap.docs[0].id)
+                                      .collection("Record")
+                                      .doc(DateFormat('dd MMMM yyyy')
+                                          .format(DateTime.now()))
+                                      .update({
+                                    'date': Timestamp.now(),
+                                    'checkIn': checkIn,
+                                    'checkOut': DateFormat('hh:mm').format(
+                                      DateTime.now(),
+                                    ),
+                                    'location': GeoPoint(
+                                        currentPosition.latitude,
+                                        currentPosition.longitude),
+                                  });
+                                } catch (e) {
+                                  setState(() {
+                                    checkIn = DateFormat('hh:mm')
+                                        .format(DateTime.now());
+                                  });
+                                  await FirebaseFirestore.instance
+                                      .collection("student")
+                                      .doc(snap.docs[0].id)
+                                      .collection("Record")
+                                      .doc(DateFormat('dd MMMM yyyy')
+                                          .format(DateTime.now()))
+                                      .set({
+                                    'date': Timestamp.now(),
+                                    'checkIn': DateFormat('hh:mm').format(
+                                      DateTime.now(),
+                                    ),
+                                    'checkOut': "--/--",
+                                    'location': GeoPoint(
+                                        currentPosition.latitude,
+                                        currentPosition.longitude),
+                                  });
+                                }
+
+                                key.currentState!.reset();
+                              } else {
+                                print("hud2");
+                                // Display an error message using a SnackBar
+                                // ignore: use_build_context_synchronously
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content:
+                                        Text('Please check in at your school.'),
                                   ),
-                                  'checkOut': "--/--",
-                                });
+                                );
                               }
-
-                              key.currentState!.reset();
                             });
                       },
                     ),
@@ -290,7 +364,9 @@ class _TodayScreenState extends State<TodayScreen> {
                             fontFamily: "NexaRegular",
                             fontSize: screenWidth / 24),
                       ),
-                    ))
+                    ),
+                  ),
+            // Text(locationMessage),
           ],
         ),
       ),
