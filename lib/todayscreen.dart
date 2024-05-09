@@ -1,5 +1,7 @@
 import 'dart:async';
-
+import 'dart:math';
+import 'package:crypto/crypto.dart' as crypto;
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
@@ -8,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_att/model/user.dart';
 import 'package:slide_to_act/slide_to_act.dart';
+import 'dart:typed_data';
 
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
@@ -23,7 +26,7 @@ class _TodayScreenState extends State<TodayScreen> {
   String checkIn = "--/--";
   String scanResult = " ";
   String lectureCode = " ";
-
+  Timer? timer;
   // Location
   String locationMessage = '';
   late String lat;
@@ -40,8 +43,16 @@ class _TodayScreenState extends State<TodayScreen> {
     super.initState();
     _getRecord();
     _getLectureCode();
+    startTimer();
   }
 
+  @override
+  void dispose() {
+    timer?.cancel(); // Add this line
+    super.dispose();
+  }
+
+  // QR section
   Future<void> ScanQRandCheck() async {
     String result = " ";
 
@@ -134,6 +145,7 @@ class _TodayScreenState extends State<TodayScreen> {
     }
   }
 
+  // Code generation
   void _getLectureCode() async {
     DocumentSnapshot snap = await FirebaseFirestore.instance
         .collection("lectures")
@@ -143,9 +155,34 @@ class _TodayScreenState extends State<TodayScreen> {
     setState(() {
       lectureCode = snap['code'];
     });
-    print(lectureCode);
   }
 
+  // Key generation
+  void startTimer() {
+    timer = Timer.periodic(const Duration(seconds: 60), (timer) {
+      print("check1");
+      // Generating random key
+      final key = generateRandomKey();
+
+      FirebaseFirestore.instance
+          .collection("lectures")
+          .doc("Mobile Programming")
+          .update({"code": key});
+    });
+    print("check2");
+  }
+
+  String generateRandomKey() {
+    print("generate");
+    final bytes = Uint8List(32);
+    for (int i = 0; i < 32; i++) {
+      bytes[i] = Random.secure().nextInt(256);
+    }
+    final hash = crypto.sha256.convert(bytes);
+    return base64Encode(hash.bytes);
+  }
+
+  // Location
   Future<Position> _getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return Future.error('Location services are disabled');
