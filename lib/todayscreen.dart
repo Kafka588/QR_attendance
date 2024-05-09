@@ -331,9 +331,9 @@ class _TodayScreenState extends State<TodayScreen> {
                         Text(
                           "Lecture Name",
                           style: TextStyle(
-                            fontFamily: "NexaRegular",
+                            fontFamily: "NexaBold",
                             fontSize: screenWidth / 20,
-                            color: Colors.black54,
+                            color: Colors.black,
                           ),
                         ),
                       ],

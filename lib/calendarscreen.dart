@@ -198,18 +198,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                             MainAxisAlignment.center,
                                         children: [
                                           Text(
-                                            "Check Out",
-                                            style: TextStyle(
-                                              fontFamily: "NexaRegular",
-                                              fontSize: screenWidth / 20,
-                                              color: Colors.black54,
-                                            ),
-                                          ),
-                                          Text(
-                                            snap[index]['checkOut'],
+                                            "Lecture Name",
                                             style: TextStyle(
                                               fontFamily: "NexaBold",
                                               fontSize: screenWidth / 18,
+                                              color: Colors.black,
                                             ),
                                           ),
                                         ],
