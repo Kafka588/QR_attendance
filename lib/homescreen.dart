@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:qr_att/calendarscreen.dart';
 import 'package:qr_att/model/user.dart';
 import 'package:qr_att/profilescreen.dart';
@@ -32,10 +35,41 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    getId();
+    getId().then((value) {
+      _getCredentials();
+      _getProfilePic();
+    });
   }
 
-  void getId() async {
+  void _getCredentials() async {
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection("student")
+          .doc(User.id)
+          .get();
+      setState(() {
+        User.canEdit = doc['canEdit'];
+        User.firstName = doc['firstName'];
+        User.lastName = doc['lastName'];
+        User.birthDate = doc['birthDate'];
+        User.address = doc['address'];
+      });
+    } catch (e) {
+      return;
+    }
+  }
+
+  void _getProfilePic() async {
+    DocumentSnapshot doc = await FirebaseFirestore.instance
+        .collection("student")
+        .doc(User.id)
+        .get();
+    setState(() {
+      User.profilePicLink = doc['profilePic'];
+    });
+  }
+
+  Future<void> getId() async {
     QuerySnapshot snap = await FirebaseFirestore.instance
         .collection("student")
         .where('id', isEqualTo: User.studentID)
