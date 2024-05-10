@@ -42,8 +42,8 @@ class _TodayScreenState extends State<TodayScreen> {
   void initState() {
     super.initState();
     _getRecord();
-    _getLectureCode();
     startTimer();
+    _getLectureCode();
   }
 
   @override
@@ -67,7 +67,12 @@ class _TodayScreenState extends State<TodayScreen> {
     });
 
     if (scanResult == lectureCode) {
-      print("how?");
+      print("working");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Atleast they are equal'),
+        ),
+      );
       _getCurrentLocation().then((value) {
         lat = '${value.latitude}';
         long = '${value.longitude}';
@@ -139,7 +144,7 @@ class _TodayScreenState extends State<TodayScreen> {
       print("bolku bna zda mine");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Camera not working!'),
+          content: Text('Wrong QR code'),
         ),
       );
     }
@@ -147,6 +152,7 @@ class _TodayScreenState extends State<TodayScreen> {
 
   // Code generation
   void _getLectureCode() async {
+    print(lectureCode);
     DocumentSnapshot snap = await FirebaseFirestore.instance
         .collection("lectures")
         .doc('Mobile Programming')
@@ -161,8 +167,9 @@ class _TodayScreenState extends State<TodayScreen> {
   void startTimer() {
     timer = Timer.periodic(const Duration(seconds: 60), (timer) {
       print("check1");
+      print(lectureCode);
       // Generating random key
-      final key = generateRandomKey();
+      final key = generateRandomKey(6);
 
       FirebaseFirestore.instance
           .collection("lectures")
@@ -172,14 +179,13 @@ class _TodayScreenState extends State<TodayScreen> {
     print("check2");
   }
 
-  String generateRandomKey() {
-    print("generate");
-    final bytes = Uint8List(32);
-    for (int i = 0; i < 32; i++) {
-      bytes[i] = Random.secure().nextInt(256);
-    }
-    final hash = crypto.sha256.convert(bytes);
-    return base64Encode(hash.bytes);
+  String generateRandomKey(int length) {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final random = Random();
+    return String.fromCharCodes(Iterable.generate(
+      length,
+      (_) => chars.codeUnitAt(random.nextInt(chars.length)),
+    ));
   }
 
   // Location
