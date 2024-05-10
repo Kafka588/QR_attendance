@@ -6,6 +6,7 @@ import 'package:qr_att/homescreen.dart';
 import 'package:qr_att/loginscreen.dart';
 import 'package:qr_att/model/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +20,12 @@ Future<void> main() async {
         appId: "1:350777898247:web:9ac84ae09575587a47c1a2",
         measurementId: "G-ZSZLELFKNF"),
   );
+
+  await Permission.locationWhenInUse.isDenied.then((valueOfPermission) {
+    if (valueOfPermission == true) {
+      Permission.locationWhenInUse.request();
+    }
+  });
 
   runApp(const MyApp());
 }

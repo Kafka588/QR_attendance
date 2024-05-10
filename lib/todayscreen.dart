@@ -1,17 +1,17 @@
 import 'dart:async';
+import 'dart:ffi';
 import 'dart:math';
-import 'package:crypto/crypto.dart' as crypto;
-import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
+import 'package:android_intent/android_intent.dart';
 import 'package:qr_att/model/user.dart';
-import 'package:slide_to_act/slide_to_act.dart';
-import 'dart:typed_data';
+import 'package:permission_handler/permission_handler.dart';
 
+// import 'package:slide_to_act/slide_to_act.dart';
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
 
@@ -39,22 +39,66 @@ class _TodayScreenState extends State<TodayScreen> {
 
   Color primary = const Color.fromRGBO(108, 53, 222, 1);
 
+  @override
   void initState() {
     super.initState();
+    _requestLocationPermission();
     _getRecord();
     startTimer();
-    _getLectureCode();
+    _getCurrentLocation();
+  }
+
+  // Request location permission
+  void _requestLocationPermission() async {
+    var status = await Permission.location.request();
+    if (status.isDenied || status.isRestricted) {
+      // Handle denied or restricted permissions
+    }
+  }
+
+  // Location
+  Future<Position> _getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return Future.error('Location services are disabled');
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.deniedForever) {
+      return Future.error('Location permissions are permanently denied');
+    }
+
+    return await Geolocator.getCurrentPosition();
+  }
+
+  Future<bool> _isLocationWithinBoundary(Position currentPosition) async {
+    double latitude = currentPosition.latitude;
+    double longitude = currentPosition.longitude;
+
+    // Check if latitude is within the defined range
+    bool isLatitudeWithinRange = (latitude >= minUniversityLatitude &&
+        latitude <= maxUniversityLatitude);
+    print('Is latitude within range? $isLatitudeWithinRange');
+
+    // Check if longitude is within the defined range
+    bool isLongitudeWithinRange = (longitude >= minUniversityLongitude &&
+        longitude <= maxUniversityLongitude);
+    print('Is longitude within range? $isLongitudeWithinRange');
+
+    // Return true if both latitude and longitude are within the defined range
+    return isLatitudeWithinRange && isLongitudeWithinRange;
   }
 
   @override
   void dispose() {
-    timer?.cancel(); // Add this line
+    timer?.cancel();
     super.dispose();
   }
 
   // QR section
-  Future<void> ScanQRandCheck() async {
+  Future<void> scanQRandCheck() async {
     String result = " ";
+    var locationStatus = await Permission.location.status;
+    if (locationStatus.isDenied || locationStatus.isRestricted) {
+      return;
+    }
 
     try {
       result = await FlutterBarcodeScanner.scanBarcode(
@@ -80,18 +124,25 @@ class _TodayScreenState extends State<TodayScreen> {
           locationMessage = 'location - latitude: $lat, longtitude: $long';
         });
       });
+      Text(locationMessage);
       Position currentPosition = await _getCurrentLocation();
       bool isWithinUniversity =
           await _isLocationWithinBoundary(currentPosition);
-
+      print(lat);
+      print(long);
       if (isWithinUniversity) {
-        print('boltson');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('location checking correctly'),
+          ),
+        );
+        print('location check');
 
         QuerySnapshot snap = await FirebaseFirestore.instance
             .collection("student")
             .where('id', isEqualTo: User.studentID)
             .get();
-
+        print('student get');
         DocumentSnapshot snap2 = await FirebaseFirestore.instance
             .collection("student")
             .doc(snap.docs[0].id)
@@ -141,18 +192,18 @@ class _TodayScreenState extends State<TodayScreen> {
         );
       }
     } else {
-      print("bolku bna zda mine");
+      print("bolku bna");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Wrong QR code'),
         ),
       );
     }
+    Text(locationMessage);
   }
 
   // Code generation
   void _getLectureCode() async {
-    print(lectureCode);
     DocumentSnapshot snap = await FirebaseFirestore.instance
         .collection("lectures")
         .doc('Mobile Programming')
@@ -160,23 +211,25 @@ class _TodayScreenState extends State<TodayScreen> {
 
     setState(() {
       lectureCode = snap['code'];
+
+      print("lecture code:" + lectureCode);
     });
   }
 
   // Key generation
   void startTimer() {
     timer = Timer.periodic(const Duration(seconds: 60), (timer) {
-      print("check1");
-      print(lectureCode);
+      print("timer check");
       // Generating random key
       final key = generateRandomKey(6);
 
       FirebaseFirestore.instance
           .collection("lectures")
           .doc("Mobile Programming")
-          .update({"code": key});
+          .update({"code": key}).then((_) {
+        _getLectureCode();
+      }); // Fixed this line
     });
-    print("check2");
   }
 
   String generateRandomKey(int length) {
@@ -186,36 +239,6 @@ class _TodayScreenState extends State<TodayScreen> {
       length,
       (_) => chars.codeUnitAt(random.nextInt(chars.length)),
     ));
-  }
-
-  // Location
-  Future<Position> _getCurrentLocation() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return Future.error('Location services are disabled');
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.deniedForever) {
-      return Future.error('Location permissions are permanently denied');
-    }
-
-    return await Geolocator.getCurrentPosition();
-  }
-
-  Future<bool> _isLocationWithinBoundary(Position currentPosition) async {
-    double latitude = currentPosition.latitude;
-    double longitude = currentPosition.longitude;
-
-    // Check if latitude is within the defined range
-    bool isLatitudeWithinRange = (latitude >= minUniversityLatitude &&
-        latitude <= maxUniversityLatitude);
-    print('Is latitude within range? $isLatitudeWithinRange');
-
-    // Check if longitude is within the defined range
-    bool isLongitudeWithinRange = (longitude >= minUniversityLongitude &&
-        longitude <= maxUniversityLongitude);
-    print('Is longitude within range? $isLongitudeWithinRange');
-
-    // Return true if both latitude and longitude are within the defined range
-    return isLatitudeWithinRange && isLongitudeWithinRange;
   }
 
   void _getRecord() async {
@@ -393,7 +416,7 @@ class _TodayScreenState extends State<TodayScreen> {
               child: Builder(
                 builder: (context) {
                   return GestureDetector(
-                    onTap: ScanQRandCheck,
+                    onTap: scanQRandCheck,
                     child: Center(
                       child: Container(
                         height: screenWidth / 2,
