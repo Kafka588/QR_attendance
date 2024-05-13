@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:qr_att/auth/signupscreen.dart';
 import 'package:qr_att/homescreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:qr_att/auth/firebase_service_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,7 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Color primary = const Color.fromRGBO(108, 53, 222, 1);
 
   late SharedPreferences sharedPreferences;
-
+  final FirebaseAuthService _authService = FirebaseAuthService();
   @override
   Widget build(BuildContext context) {
     final bool isKeyboardVisible =
@@ -81,15 +84,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   content: Text("Password is empty!"),
                 ));
               } else {
-                QuerySnapshot snap = await FirebaseFirestore.instance
-                    .collection('student')
-                    .where('id', isEqualTo: id)
-                    .get();
-
                 try {
-                  if (password == snap.docs[0]['password']) {
+                  User? user = await _authService.signInWithEmailAndPassword(
+                      id, password);
+                  if (user != null) {
                     sharedPreferences = await SharedPreferences.getInstance();
-
                     sharedPreferences.setString('studentId', id).then((_) {
                       Navigator.pushReplacement(
                         context,
@@ -98,29 +97,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       );
                     });
                   } else {
-                    // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("Password is not correct!"),
+                      content: Text(
+                          "Authentication failed. Please check your credentials."),
                     ));
                   }
                 } catch (e) {
-                  String error = "  ";
-                  // ignore: avoid_print
-                  print(e.toString());
-                  if (e.toString() ==
-                      "RangeError (index): Index out of range: no indices are valid: 0") {
-                    setState(() {
-                      error = "Student ID doesn't exist";
-                    });
-                  } else {
-                    setState(() {
-                      error = "Something went wrong";
-                    });
-                  }
-
-                  // ignore: use_build_context_synchronously
+                  print("Error occurred: $e");
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(error),
+                    content: Text("An error occurred. Please try again later."),
                   ));
                 }
               }
@@ -142,26 +127,42 @@ class _LoginScreenState extends State<LoginScreen> {
                   fieldTitle("Password"),
                   customField("Enter your password ", passController, true),
                   Container(
-                      height: 60,
-                      width: screenWidth,
-                      margin: EdgeInsets.only(top: screenHeight / 40),
-                      decoration: BoxDecoration(
-                        color: primary,
-                        borderRadius:
-                            const BorderRadius.all(Radius.circular(30)),
-                      ),
-                      child: Center(
-                        child: Text(
-                          "LOGIN",
-                          style: TextStyle(
-                            fontFamily: "NexaBold",
-                            fontSize: screenWidth / 26,
-                            color: Colors.white,
-                            letterSpacing: 2,
-                          ),
+                    height: 60,
+                    width: screenWidth,
+                    margin: EdgeInsets.only(top: screenHeight / 40),
+                    decoration: BoxDecoration(
+                      color: primary,
+                      borderRadius: const BorderRadius.all(Radius.circular(30)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "LOGIN",
+                        style: TextStyle(
+                          fontFamily: "NexaBold",
+                          fontSize: screenWidth / 26,
+                          color: Colors.white,
+                          letterSpacing: 2,
                         ),
-                      ))
+                      ),
+                    ),
+                  )
                 ],
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SignUpScreen()),
+              );
+            },
+            child: Text(
+              "Sign Up",
+              style: TextStyle(
+                color: Colors.blue,
+                fontSize: screenWidth / 26,
+                fontFamily: "NexaBold",
               ),
             ),
           ),

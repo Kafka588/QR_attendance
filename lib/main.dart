@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:month_year_picker/month_year_picker.dart';
 import 'package:qr_att/homescreen.dart';
-import 'package:qr_att/loginscreen.dart';
+import 'package:qr_att/auth/loginscreen.dart';
 import 'package:qr_att/model/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -88,6 +88,7 @@ class _AuthCheckState extends State<AuthCheck> {
 
   @override
   Widget build(BuildContext context) {
-    return userAvailable ? const HomeScreen() : const LoginScreen();
+    return const LoginScreen();
+    // return SignUpScreen();
   }
 }
