@@ -1,14 +1,19 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:month_year_picker/month_year_picker.dart';
 import 'package:qr_att/homescreen.dart';
+
+import 'package:qr_att/auth/loginscreen.dart';
+
 import 'package:qr_att/loginscreen.dart';
+
 import 'package:qr_att/model/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-// can you please fill this using my project?
   await Firebase.initializeApp(
     options: const FirebaseOptions(
         apiKey: "AIzaSyDwXRhlMDjEpWRoedJxIDRH5S2ekA-z-u0",
@@ -19,6 +24,12 @@ Future<void> main() async {
         appId: "1:350777898247:web:9ac84ae09575587a47c1a2",
         measurementId: "G-ZSZLELFKNF"),
   );
+
+  await Permission.locationWhenInUse.isDenied.then((valueOfPermission) {
+    if (valueOfPermission == true) {
+      Permission.locationWhenInUse.request();
+    }
+  });
 
   runApp(const MyApp());
 }
@@ -31,7 +42,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'QR app',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -39,6 +50,9 @@ class MyApp extends StatelessWidget {
       home: const KeyboardVisibilityProvider(
         child: AuthCheck(),
       ),
+      localizationsDelegates: const [
+        MonthYearPickerLocalizations.delegate,
+      ],
     );
   }
 }
@@ -65,7 +79,10 @@ class _AuthCheckState extends State<AuthCheck> {
     try {
       if (sharedPreferences.getString('studentId') != null) {
         setState(() {
-          User.username = sharedPreferences.getString('studentId')!;
+
+          User.studentID = sharedPreferences.getString('studentId')!=======
+  
+
           userAvailable = true;
         });
       }
@@ -78,6 +95,7 @@ class _AuthCheckState extends State<AuthCheck> {
 
   @override
   Widget build(BuildContext context) {
-    return userAvailable ? const HomeScreen() : const LoginScreen();
+    return const LoginScreen();
+    // return SignUpScreen();
   }
 }
