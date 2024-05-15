@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,14 @@ import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_att/model/user.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:qr_att/model/user.dart';
+import 'package:slide_to_act/slide_to_act.dart';
+
 
 // import 'package:slide_to_act/slide_to_act.dart';
 class TodayScreen extends StatefulWidget {
@@ -35,6 +44,7 @@ class _TodayScreenState extends State<TodayScreen> {
   final double maxUniversityLatitude = 47.926668;
   final double minUniversityLongitude = 106.883102;
   final double maxUniversityLongitude = 106.885400;
+
 
   Color primary = const Color.fromRGBO(108, 53, 222, 1);
 
@@ -238,21 +248,24 @@ class _TodayScreenState extends State<TodayScreen> {
       length,
       (_) => chars.codeUnitAt(random.nextInt(chars.length)),
     ));
-  }
+
 
   void _getRecord() async {
     try {
       QuerySnapshot snap = await FirebaseFirestore.instance
+
           .collection("student")
           .where('id', isEqualTo: User.studentID)
           .get();
 
       DocumentSnapshot snap2 = await FirebaseFirestore.instance
           .collection("student")
+
           .doc(snap.docs[0].id)
           .collection("Record")
           .doc(DateFormat('dd MMMM yyyy').format(DateTime.now()))
           .get();
+
 
       if (mounted) {
         // Check if the widget is still mounted
@@ -267,6 +280,7 @@ class _TodayScreenState extends State<TodayScreen> {
           checkIn = "--/--";
         });
       }
+
     }
   }
 
@@ -295,7 +309,9 @@ class _TodayScreenState extends State<TodayScreen> {
             Container(
               margin: const EdgeInsets.only(top: 8),
               child: Text(
+
                 "Student " + User.studentID,
+
                 style: TextStyle(
                   color: Colors.black,
                   fontFamily: "NexaBold",
@@ -357,7 +373,9 @@ class _TodayScreenState extends State<TodayScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
+
                           "Lecture Name",
+
                           style: TextStyle(
                             fontFamily: "NexaBold",
                             fontSize: screenWidth / 20,
@@ -396,12 +414,14 @@ class _TodayScreenState extends State<TodayScreen> {
               ),
             ),
             StreamBuilder(
+
                 stream: Stream.periodic(const Duration(seconds: 1)),
                 builder: (context, snapshot) {
                   return Container(
                     margin: const EdgeInsets.only(top: 8),
                     child: Text(
                       DateFormat('hh:mm:ss a').format(DateTime.now()),
+
                       style: TextStyle(
                         fontFamily: "NexaRegular",
                         fontSize: screenWidth / 20,
@@ -473,6 +493,7 @@ class _TodayScreenState extends State<TodayScreen> {
               ),
             )
             // Text(locationMessage),
+
           ],
         ),
       ),

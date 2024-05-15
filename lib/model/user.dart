@@ -1,4 +1,5 @@
 class User {
+
   static String studentID = " ";
   static String id = " ";
   static String firstName = " ";
@@ -7,4 +8,5 @@ class User {
   static String address = " ";
   static String profilePicLink = " ";
   static bool canEdit = true;
+
 }
