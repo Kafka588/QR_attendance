@@ -1,4 +1,5 @@
 {
     "cmake.sourceDirectory": "C:/Users/kafka/Documents/QR_attendanceapp/QR_attendance/linux",
-    "java.configuration.updateBuildConfiguration": "automatic"
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "cmake.configureOnOpen": false
 }

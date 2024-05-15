@@ -32,10 +32,41 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    getId();
+    getId().then((value) {
+      _getCredentials();
+      _getProfilePic();
+    });
   }
 
-  void getId() async {
+  void _getProfilePic() async {
+    DocumentSnapshot doc = await FirebaseFirestore.instance
+        .collection("student")
+        .doc(User.id)
+        .get();
+    setState(() {
+      User.profilePicLink = doc['profilePicLink'];
+    });
+  }
+
+  void _getCredentials() async {
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection("student")
+          .doc(User.id)
+          .get();
+      setState(() {
+        User.canEdit = doc['canEdit'];
+        User.firstName = doc['firstName'];
+        User.lastName = doc['lastName'];
+        User.birthDate = doc['birthDate'];
+        User.address = doc['address'];
+      });
+    } catch (e) {
+      return;
+    }
+  }
+
+  Future<void> getId() async {
     QuerySnapshot snap = await FirebaseFirestore.instance
         .collection("student")
         .where('id', isEqualTo: User.studentID)
